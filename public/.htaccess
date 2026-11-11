@@ -1,0 +1,26 @@
+# Apache settings for shared hosting (reg.ru and similar).
+# The app uses hash navigation (#home, #workout…), so no rewrite rules are needed for routing.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Always use HTTPS (enable the free Let's Encrypt certificate in the hosting panel first).
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # index.html must not be cached, otherwise users keep an old version after an update.
+  <FilesMatch "^(index\.html|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+  # Built assets have content hashes in their names and can be cached for a long time.
+  <FilesMatch "\.(js|css|svg|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+AddType application/manifest+json .webmanifest
+DirectoryIndex index.html
+Options -Indexes
